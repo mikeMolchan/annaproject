@@ -90,6 +90,23 @@
           </div>
         </div>
       </div>
+
+      <!-- Дни рождения -->
+      <div class="col-md-6">
+        <h4 class="section-title">Ближайшие отпуска</h4>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Алексей Кузнецов</h5>
+            <p class="card-text">День рождения: 06.07.2025</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Елена Орлова</h5>
+            <p class="card-text">День рождения: 10.07.2025</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -102,18 +119,20 @@
             <th>Имя</th>
             <th>Должность</th>
             <th>Дата рождения</th>
-            <th>Отпуск</th>
+            <th>Начало отпуска</th>
+            <th>Конец отпуска</th>
             <th>Email</th>
             <th>Истечение контракта</th>
           </tr>
         </thead>
         <tbody>
             {% for employee in employees %}
-          <tr class="bg-white">
+          <tr class="bg-white" style="height: 60px;">
             <td>{{employee.name}}</td>
             <td>{{employee.position}}</td>
             <td>{{employee.birthday}}</td>
-            <td>{{employee.vacation}}</td>
+            <td>{{employee.vacation_start}}</td>
+            <td>{{employee.vacation_end}}</td>
             <td>{{employee.email}}</td>
             <td>{{employee.contract}}</td>
             {% endfor %}
@@ -123,19 +142,35 @@
     </div>
   </div>
 
-  <h4 class="mx-5 my-3">Добавить сотрудника</h2>
-    <form action="/" method="POST" class="table mb-5 mx-5 my-3">
-        <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto">
-          {{ form.csrf_token }}
-          {{ form.name(class="form-control w-auto", style="width: 130px;", placeholder="Имя") }}
-          {{ form.position(class="form-control w-auto", style="width: 130px;", placeholder="Должность") }}
-          {{ form.birthday(class="form-control w-auto", style="width: 130px;", placeholder="Дата рождения") }}
-          {{ form.vacation(class="form-control w-auto", style="width: 130px;", placeholder="Отпуск") }}
-          {{ form.email(class="form-control w-auto", style="width: 180px;", placeholder="Email") }}
-          {{ form.contract(class="form-control w-auto", style="width: 130px;", placeholder="Контракт") }}
-          {{ form.submit(class="btn btn-success") }}
-        </div>
-      </form>
+  <h4 class="mx-5 my-3" id="add">Добавить нового сотрудника, отпуск либо продлить контракт</h2>
+<form action="/" method="POST" class="table mb-5 mx-5 my-3">
+
+  <!-- Первый ряд -->
+  <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto mb-2 my-3">
+    {{ form.csrf_token }}
+    {{ form.name(class="form-control w-auto", style="width: 130px;", placeholder="Имя") }}
+  </div>
+  
+  <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto my-3">
+    {{ form.vacation_start(class="form-control w-auto", style="width: 130px;", placeholder="Начало отпуска") }}
+    {{ form.vacation_end(class="form-control w-auto", style="width: 130px;", placeholder="Конец отпуска") }}
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto my-3">
+      {{ form.contract(class="form-control w-auto", style="width: 130px;", placeholder="Контракт") }}
+  </div>
+
+  <div class="d-flex gap-2 align-items-center overflow-auto mb-2 my-3">
+    {{ form.email(class="form-control w-auto", style="width: 180px;", placeholder="Email") }}
+    {{ form.birthday(class="form-control w-auto", style="width: 130px;", placeholder="Дата рождения") }}
+    {{ form.position(class="form-control w-auto", style="width: 130px;", placeholder="Должность") }}
+  </div>
+  {{ form.submit(class="btn btn-success my-3") }}
+</form>
+<div class="alert alert-primary" role="alert">
+    Чтобы добавить отпуск или продлить контракт достаточно ввести имя сотрудника и заполнить соответствующие поле(-я) <br>
+    При добавлении сотрудника обязательным для заполнения является только имя
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
