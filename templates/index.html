@@ -43,69 +43,52 @@
       <div class="col-md-6">
         <h4 class="section-title">Сейчас в отпуске
         </h4>
+        {% for employee in vacation_now %}
         <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Иван Иванов</h5>
-            <p class="card-text">Отпуск с 01.07.2025 по 14.07.2025</p>
-          </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ employee[0] }}</h5>
+                <p class="card-text">{{ employee[1] }} дней до конца отпуска</p>
+            </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Мария Смирнова</h5>
-            <p class="card-text">Отпуск с 05.07.2025 по 20.07.2025</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Отпуск -->
-      <div class="col-md-6">
+        {% endfor %}
+    </div>
+    
+    <div class="col-md-6">
         <h4 class="section-title">Истечение контракта</h4>
+        {% for employee in contract_soon %}
         <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Иван Иванов</h5>
-            <p class="card-text">Отпуск с 01.07.2025 по 14.07.2025</p>
-          </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ employee[0] }}</h5>
+                <p class="card-text">Контракт истекает через {{ employee[1] }} дней</p>
+            </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Мария Смирнова</h5>
-            <p class="card-text">Отпуск с 05.07.2025 по 20.07.2025</p>
-          </div>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Дни рождения -->
       <div class="col-md-6">
         <h4 class="section-title">Ближайшие дни рождения</h4>
+        {% for employee in birthday_soon %}
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Алексей Кузнецов</h5>
-            <p class="card-text">День рождения: 06.07.2025</p>
+            <h5 class="card-title">{{ employee[0] }}</h5>
+            <p class="card-text">День рождения через {{ employee[1] }} дней</p>
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Елена Орлова</h5>
-            <p class="card-text">День рождения: 10.07.2025</p>
-          </div>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Дни рождения -->
       <div class="col-md-6">
         <h4 class="section-title">Ближайшие отпуска</h4>
+        {% for employee in vacation_soon %}
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Алексей Кузнецов</h5>
-            <p class="card-text">День рождения: 06.07.2025</p>
+            <h5 class="card-title">{{ employee[0] }}</h5>
+            <p class="card-text">Отпуск через {{ employee[1] }} дней</p>
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Елена Орлова</h5>
-            <p class="card-text">День рождения: 10.07.2025</p>
-          </div>
-        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -148,28 +131,36 @@
   <!-- Первый ряд -->
   <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto mb-2 my-3">
     {{ form.csrf_token }}
-    {{ form.name(class="form-control w-auto", style="width: 130px;", placeholder="Имя") }}
+    {{ form.name(class="form-control w-auto", style="width: 130px;", placeholder="Имя", list="employee_names") }}
+    <datalist id="employee_names">
+        {% for employee in employees %}
+          <option value="{{ employee.name }}">
+        {% endfor %}
+    </datalist>
   </div>
   
   <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto my-3">
+    <label for="vacation_start">Начало отпуска</label>
     {{ form.vacation_start(class="form-control w-auto", style="width: 130px;", placeholder="Начало отпуска") }}
+    <label for="vacation_end">Конец отпуска</label>
     {{ form.vacation_end(class="form-control w-auto", style="width: 130px;", placeholder="Конец отпуска") }}
-  </div>
+</div>
 
-  <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto my-3">
+<div class="d-flex flex-wrap gap-2 align-items-center overflow-auto my-3">
+      <label for="contract">Окончание контракта</label>
       {{ form.contract(class="form-control w-auto", style="width: 130px;", placeholder="Контракт") }}
-  </div>
-
-  <div class="d-flex gap-2 align-items-center overflow-auto mb-2 my-3">
+    </div>
+    
+    <div class="d-flex gap-2 align-items-center overflow-auto mb-2 my-3">
     {{ form.email(class="form-control w-auto", style="width: 180px;", placeholder="Email") }}
+    <label for="birthday">День рождения</label>
     {{ form.birthday(class="form-control w-auto", style="width: 130px;", placeholder="Дата рождения") }}
     {{ form.position(class="form-control w-auto", style="width: 130px;", placeholder="Должность") }}
   </div>
   {{ form.submit(class="btn btn-success my-3") }}
 </form>
 <div class="alert alert-primary" role="alert">
-    Чтобы добавить отпуск или продлить контракт достаточно ввести имя сотрудника и заполнить соответствующие поле(-я) <br>
-    При добавлении сотрудника обязательным для заполнения является только имя
+    Чтобы добавить отпуск или продлить контракт достаточно выбрать из списка имя сотрудника и заполнить соответствующие поле(-я) <br>
 </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
