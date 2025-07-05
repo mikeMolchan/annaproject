@@ -46,8 +46,8 @@ class Employee4(db.Model):
 
 # Create table schema in the db
 # !Comment after creating a table!
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
 class AddEmployeeForm(FlaskForm):
     name = StringField('Имя', validators=[DataRequired()])
@@ -71,14 +71,7 @@ def home():
         if request.method == 'POST':
             if not check_if_exists(form.name.data):
                 add_employee(form.name.data, form.position.data, form.birthday.data, form.vacation_start.data, form.vacation_end.data, form.email.data, form.contract.data)
-                form = AddEmployeeForm(formdata=None)
-            else:
-                if form.vacation_start.data and form.vacation_start.data:
-                    update_vacation_by_name(form.name.data, form.vacation_start.data, form.vacation_end.data)
-                elif form.contract.data:
-                    update_contract_by_name(form.name.data, form.contract.data)
-                else:
-                    pass
+                return redirect(url_for('edit'))
 
             return render_template('index.html', form=form, employees=get_employees(), vacation_now=vacation_now(), contract_soon=contract_soon(), birthday_soon=birthday_soon(), vacation_soon=vacation_soon())
     return render_template('index.html', form=form, employees=get_employees(), vacation_now=vacation_now(), contract_soon=contract_soon(), birthday_soon=birthday_soon(), vacation_soon=vacation_soon())
@@ -92,18 +85,63 @@ def edit():
             if not check_if_exists(form.name.data):
                 add_employee(form.name.data, form.position.data, form.birthday.data, form.vacation_start.data, form.vacation_end.data, form.email.data, form.contract.data)
                 form = AddEmployeeForm(formdata=None)
-            else:
-                if form.vacation_start.data and form.vacation_start.data:
-                    update_vacation_by_name(form.name.data, form.vacation_start.data, form.vacation_end.data)
-                elif form.contract.data:
-                    update_contract_by_name(form.name.data, form.contract.data)
-                else:
-                    pass
 
             return render_template('edit.html', form=form, employees=get_employees())
     return render_template('edit.html', form=form, employees=get_employees())
 
+@app.route("/update_vacation_start", methods=["POST"])
+def update_vacation_start():
+    employee_id = request.form.get("id")
+    new_date_str = request.form.get("vacation_start")
 
+    if not employee_id or not new_date_str:
+        return redirect(url_for("edit"))
+
+    employee = db.session.get(Employee4, int(employee_id))
+    if employee:
+        employee.vacation_start = dt.datetime.strptime(new_date_str, "%Y-%m-%d").date()
+        db.session.commit()
+
+    return redirect(url_for("edit"))
+
+@app.route("/update_vacation_end", methods=["POST"])
+def update_vacation_end():
+    employee_id = request.form.get("id")
+    new_date_str = request.form.get("vacation_end")
+
+    if not employee_id or not new_date_str:
+        return redirect(url_for("edit"))
+
+    employee = db.session.get(Employee4, int(employee_id))
+    if employee:
+        employee.vacation_end = dt.datetime.strptime(new_date_str, "%Y-%m-%d").date()
+        db.session.commit()
+
+    return redirect(url_for("edit"))
+
+@app.route("/update_contract", methods=["POST"])
+def update_contract():
+    employee_id = request.form.get("id")
+    new_date_str = request.form.get("contract")
+
+    if not employee_id or not new_date_str:
+        return redirect(url_for("edit"))
+
+    employee = db.session.get(Employee4, int(employee_id))
+    if employee:
+        employee.contract = dt.datetime.strptime(new_date_str, "%Y-%m-%d").date()
+        db.session.commit()
+
+    return redirect(url_for("edit"))
+
+@app.route("/delete/<int:id>", methods=["POST"])
+def delete_employee(id):
+    with app.app_context():
+        employee = db.session.get(Employee4, id)
+        if employee:
+            db.session.delete(employee)
+            db.session.commit()
+    return redirect(url_for("edit"))
 
 
 
@@ -129,20 +167,6 @@ def check_if_exists(name: str) -> bool:
             continue
     return False
 
-def update_vacation_by_name(name: str, vacation_start: str, vacation_end: str) -> None:
-    with app.app_context():
-        employee = Employee4.query.filter_by(name=name).first()
-        if employee:
-            employee.vacation_start = vacation_start
-            employee.vacation_end = vacation_end
-            db.session.commit()
-
-def update_contract_by_name(name: str, contract: str) -> None:
-    with app.app_context():
-        employee = Employee4.query.filter_by(name=name).first()
-        if employee:
-            employee.contract = contract
-            db.session.commit()
     
 
 def find_timedelta(date) -> int:
