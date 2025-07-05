@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, DateField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Optional
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -51,13 +51,13 @@ with app.app_context():
 
 class AddEmployeeForm(FlaskForm):
     name = StringField('Имя', validators=[DataRequired()])
-    position = StringField('Должность')
-    birthday = DateField('Дата рождения')
-    vacation_start = DateField('Начало отпуска')
-    vacation_end = DateField('Конец отпуска')
-    email = StringField('Email')
-    contract = DateField('Истечение контракта')
-    submit = SubmitField('Добавить')
+    position = StringField('Должность', validators=[Optional()])
+    birthday = DateField('Дата рождения', validators=[Optional()])
+    vacation_start = DateField('Начало отпуска', validators=[Optional()])
+    vacation_end = DateField('Конец отпуска', validators=[Optional()])
+    email = StringField('Email', validators=[Optional()])
+    contract = DateField('Истечение контракта', validators=[Optional()])
+    submit = SubmitField('Добавить', validators=[Optional()])
 
 
 
@@ -70,30 +70,44 @@ def home():
     if form.validate_on_submit():
         if request.method == 'POST':
             if not check_if_exists(form.name.data):
-                print(1)
                 add_employee(form.name.data, form.position.data, form.birthday.data, form.vacation_start.data, form.vacation_end.data, form.email.data, form.contract.data)
+                form = AddEmployeeForm(formdata=None)
             else:
                 if form.vacation_start.data and form.vacation_start.data:
-                    print(2)
                     update_vacation_by_name(form.name.data, form.vacation_start.data, form.vacation_end.data)
                 elif form.contract.data:
-                    print(3)
                     update_contract_by_name(form.name.data, form.contract.data)
                 else:
-                    print(4)
                     pass
 
             return render_template('index.html', form=form, employees=get_employees(), vacation_now=vacation_now(), contract_soon=contract_soon(), birthday_soon=birthday_soon(), vacation_soon=vacation_soon())
     return render_template('index.html', form=form, employees=get_employees(), vacation_now=vacation_now(), contract_soon=contract_soon(), birthday_soon=birthday_soon(), vacation_soon=vacation_soon())
 
 
+@app.route('/edit', methods=["GET", "POST"])
+def edit():
+    form = AddEmployeeForm()
+    if form.validate_on_submit():
+        if request.method == 'POST':
+            if not check_if_exists(form.name.data):
+                add_employee(form.name.data, form.position.data, form.birthday.data, form.vacation_start.data, form.vacation_end.data, form.email.data, form.contract.data)
+                form = AddEmployeeForm(formdata=None)
+            else:
+                if form.vacation_start.data and form.vacation_start.data:
+                    update_vacation_by_name(form.name.data, form.vacation_start.data, form.vacation_end.data)
+                elif form.contract.data:
+                    update_contract_by_name(form.name.data, form.contract.data)
+                else:
+                    pass
+
+            return render_template('edit.html', form=form, employees=get_employees())
+    return render_template('edit.html', form=form, employees=get_employees())
 
 
 
 
 
-
-def add_employee(name: str, position: str = 'None', birthday: str = 'None', vacation_start: str = 'None', vacation_end: str = 'None', email: str = 'None', contract: str = 'None') -> None:
+def add_employee(name: str, position: str = None, birthday: str = None, vacation_start: str = None, vacation_end: str = None, email: str = None, contract: str = None) -> None:
     with app.app_context():
         employee = Employee4(name=name, position=position, birthday=birthday, vacation_start=vacation_start, vacation_end=vacation_end, email=email, contract=contract)
         db.session.add(employee)
@@ -138,32 +152,44 @@ def vacation_now() -> list[list]:
     employees = get_employees()
     result = []
     for employee in employees:
-        if find_timedelta(employee.vacation_end) > 0 and find_timedelta(employee.vacation_start) < 0:
-            result.append([employee.name, find_timedelta(employee.vacation_end)])
+        if employee.vacation_start and employee.vacation_end:
+            if find_timedelta(employee.vacation_end) > 0 and find_timedelta(employee.vacation_start) < 0:
+                result.append([employee.name, find_timedelta(employee.vacation_end)])
+        else:
+            continue
     return result
 
 def vacation_soon() -> list[list]:
     employees = get_employees()
     result = []
     for employee in employees:
-        if find_timedelta(employee.vacation_start) < 7 and find_timedelta(employee.vacation_start) > 1:
-            result.append([employee.name, find_timedelta(employee.vacation_start)])
+        if employee.vacation_start:
+            if find_timedelta(employee.vacation_start) < 7 and find_timedelta(employee.vacation_start) > 1:
+                result.append([employee.name, find_timedelta(employee.vacation_start)])
+        else:
+            pass
     return result
 
 def birthday_soon() -> list[list]:
     employees = get_employees()
     result = []
     for employee in employees:
-        if find_timedelta(employee.birthday) < 7:
-            result.append([employee.name, find_timedelta(employee.birthday)])
+        if employee.birthday:
+            if find_timedelta(employee.birthday) < 7:
+                result.append([employee.name, find_timedelta(employee.birthday)])
+        else:
+            continue
     return result
 
 def contract_soon() -> list[list]:
     employees = get_employees()
     result = []
     for employee in employees:
-        if find_timedelta(employee.contract) < 180 :
-            result.append([employee.name, find_timedelta(employee.contract)])
+        if employee.contract:
+            if find_timedelta(employee.contract) < 180 :
+                result.append([employee.name, find_timedelta(employee.contract)])
+        else:
+            continue
     return result
 
 @scheduler.task('interval', id='every_second', seconds=1)

@@ -110,24 +110,29 @@
         </thead>
         <tbody>
             {% for employee in employees %}
-          <tr class="bg-white" style="height: 60px;">
-            <td>{{employee.name}}</td>
-            <td>{{employee.position}}</td>
-            <td>{{employee.birthday}}</td>
-            <td>{{employee.vacation_start}}</td>
-            <td>{{employee.vacation_end}}</td>
-            <td>{{employee.email}}</td>
-            <td>{{employee.contract}}</td>
+            <tr class="bg-white" style="height: 60px;">
+              <td>{{ employee.name }}</td>
+              <td>{{ employee.position }}</td>
+              <td>{{ employee.birthday }}</td>
+              <td>{{ employee.vacation_start }}</td>
+              <td>{{ employee.vacation_end }}</td>
+              <td>{{ employee.email }}</td>
+              <td>{{ employee.contract }}</td>
+              </td>
+            </tr>
             {% endfor %}
-          </tr>
         </tbody>
       </table>
     </div>
   </div>
 
+  <form action="/edit" method="post">
+    <button type="button" class="btn btn-warning mx-5" style="float: right;">Редактировать</button>
+  </form>
+
   <h4 class="mx-5 my-3" id="add">Добавить нового сотрудника, отпуск либо продлить контракт</h2>
 <form action="/" method="POST" class="table mb-5 mx-5 my-3">
-
+    {{ form.csrf_token }}
   <!-- Первый ряд -->
   <div class="d-flex flex-wrap gap-2 align-items-center overflow-auto mb-2 my-3">
     {{ form.csrf_token }}
