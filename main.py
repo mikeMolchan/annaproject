@@ -69,12 +69,15 @@ def home():
     form = AddEmployeeForm()
     if form.validate_on_submit():
         if request.method == 'POST':
-            if not check_if_exists(form.name.data):
+            if not check_if_exists(form.name.data) and form.name.data:
                 add_employee(form.name.data, form.position.data, form.birthday.data, form.vacation_start.data, form.vacation_end.data, form.email.data, form.contract.data)
                 return redirect(url_for('edit'))
+            else:
+                return render_template('edit.html', form=form, employees=get_employees(), already_exists=True)
 
-            return render_template('index.html', form=form, employees=get_employees(), vacation_now=vacation_now(), contract_soon=contract_soon(), birthday_soon=birthday_soon(), vacation_soon=vacation_soon())
+
     return render_template('index.html', form=form, employees=get_employees(), vacation_now=vacation_now(), contract_soon=contract_soon(), birthday_soon=birthday_soon(), vacation_soon=vacation_soon())
+
 
 
 @app.route('/edit', methods=["GET", "POST"])
@@ -82,11 +85,13 @@ def edit():
     form = AddEmployeeForm()
     if form.validate_on_submit():
         if request.method == 'POST':
-            if not check_if_exists(form.name.data):
+            if not check_if_exists(form.name.data) and form.name.data:
                 add_employee(form.name.data, form.position.data, form.birthday.data, form.vacation_start.data, form.vacation_end.data, form.email.data, form.contract.data)
                 form = AddEmployeeForm(formdata=None)
+                return render_template('edit.html', form=form, employees=get_employees())
+            else:
+                return render_template('edit.html', form=form, employees=get_employees(), already_exists=True)
 
-            return render_template('edit.html', form=form, employees=get_employees())
     return render_template('edit.html', form=form, employees=get_employees())
 
 @app.route("/update_vacation_start", methods=["POST"])
@@ -178,7 +183,7 @@ def vacation_now() -> list[list]:
     for employee in employees:
         if employee.vacation_start and employee.vacation_end:
             if find_timedelta(employee.vacation_end) > 0 and find_timedelta(employee.vacation_start) < 0:
-                result.append([employee.name, find_timedelta(employee.vacation_end)])
+                result.append([employee.name, find_timedelta(employee.vacation_end), employee.vacation_end])
         else:
             continue
     return result
@@ -188,8 +193,8 @@ def vacation_soon() -> list[list]:
     result = []
     for employee in employees:
         if employee.vacation_start:
-            if find_timedelta(employee.vacation_start) < 7 and find_timedelta(employee.vacation_start) > 1:
-                result.append([employee.name, find_timedelta(employee.vacation_start)])
+            if find_timedelta(employee.vacation_start) < 14 and find_timedelta(employee.vacation_start) > 1:
+                result.append([employee.name, find_timedelta(employee.vacation_start), employee.vacation_start])
         else:
             pass
     return result
@@ -200,7 +205,7 @@ def birthday_soon() -> list[list]:
     for employee in employees:
         if employee.birthday:
             if find_timedelta(employee.birthday) < 7:
-                result.append([employee.name, find_timedelta(employee.birthday)])
+                result.append([employee.name, find_timedelta(employee.birthday), employee.birthday])
         else:
             continue
     return result
@@ -211,7 +216,7 @@ def contract_soon() -> list[list]:
     for employee in employees:
         if employee.contract:
             if find_timedelta(employee.contract) < 180 :
-                result.append([employee.name, find_timedelta(employee.contract)])
+                result.append([employee.name, find_timedelta(employee.contract), employee.contract])
         else:
             continue
     return result

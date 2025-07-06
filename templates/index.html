@@ -43,52 +43,85 @@
       <div class="col-md-6">
         <h4 class="section-title">Сейчас в отпуске
         </h4>
+        {% if vacation_now %}
         {% for employee in vacation_now %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">{{ employee[0] }}</h5>
-                <p class="card-text">{{ employee[1] }} дней до конца отпуска</p>
+                <p class="card-text">{{ employee[1] }} дней до конца отпуска - {{ employee[2].strftime('%d.%m.%Y') }}</p>
             </div>
         </div>
         {% endfor %}
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">В отпуске никого нет</p>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
     
     <div class="col-md-6">
         <h4 class="section-title">Истечение контракта</h4>
+        {% if contract_soon %}
         {% for employee in contract_soon %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">{{ employee[0] }}</h5>
-                <p class="card-text">Контракт истекает через {{ employee[1] }} дней</p>
+                <p class="card-text">Контракт истекает через {{ employee[1] }} дней - {{ employee[2].strftime('%d.%m.%Y') }}</p>
             </div>
         </div>
         {% endfor %}
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">Истечение контракта не ожидается в течении полугода</p>
+            </div>
+        </div>
+        {% endif %}
       </div>
 
       <!-- Дни рождения -->
       <div class="col-md-6">
         <h4 class="section-title">Ближайшие дни рождения</h4>
+        {% if birthday_soon %}
         {% for employee in birthday_soon %}
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">{{ employee[0] }}</h5>
-            <p class="card-text">День рождения через {{ employee[1] }} дней</p>
+            <p class="card-text">День рождения через {{ employee[1] }} дней - {{ employee[2].strftime('%d.%m.%Y') }}</p>
           </div>
         </div>
         {% endfor %}
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">Дни рождения в течении недели отсутсвуют</p>
+            </div>
+        </div>
+        {% endif %}
       </div>
 
       <!-- Дни рождения -->
       <div class="col-md-6">
         <h4 class="section-title">Ближайшие отпуска</h4>
+        {% if vacation_soon %}
         {% for employee in vacation_soon %}
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">{{ employee[0] }}</h5>
-            <p class="card-text">Отпуск через {{ employee[1] }} дней</p>
+            <p class="card-text">Отпуск через {{ employee[1] }} дней - {{ employee[2].strftime('%d.%m.%Y') }}</p>
           </div>
         </div>
         {% endfor %}
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">Отпуска не ожидаются в течении двух недель</p>
+            </div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -113,11 +146,11 @@
             <tr class="bg-white" style="height: 60px;">
               <td>{{ employee.name }}</td>
               <td>{{ employee.position }}</td>
-              <td>{{ employee.birthday }}</td>
-              <td>{{ employee.vacation_start }}</td>
-              <td>{{ employee.vacation_end }}</td>
+              <td>{{ employee.birthday.strftime('%d.%m.%Y') if employee.birthday else '' }}</td>
+              <td>{{ employee.vacation_start.strftime('%d.%m.%Y') if employee.vacation_start else '' }}</td>
+              <td>{{ employee.vacation_end.strftime('%d.%m.%Y') if employee.vacation_end else '' }}</td>
               <td>{{ employee.email }}</td>
-              <td>{{ employee.contract }}</td>
+              <td>{{ employee.contract.strftime('%d.%m.%Y') if employee.contract else '' }}</td>
               </td>
             </tr>
             {% endfor %}
