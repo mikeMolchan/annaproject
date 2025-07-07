@@ -11,6 +11,14 @@ from sqlalchemy import Integer, String, Date
 from flask_apscheduler import APScheduler
 
 import datetime as dt
+import requests
+
+API_KEY = 'ab78b2973ee530ac2782f55e027a20f4-c5ea400f-893fc5ef'
+DOMAIN = 'mg.noreplywp.com'
+RECIPIENTS = ['mikke.molchan@gmail.com']
+ACTIONS = ['День Рождения', 'заканчивается отпуск', 'начинается отпуск', 'истекает контракт']
+
+
 
 app = Flask(__name__)
 app.secret_key = 'dizzaincom2025%'
@@ -66,6 +74,7 @@ class AddEmployeeForm(FlaskForm):
 
 @app.route('/', methods=["GET", "POST"])
 def home():
+    delete_expired_vacation()
     form = AddEmployeeForm()
     if form.validate_on_submit():
         if request.method == 'POST':
@@ -82,6 +91,7 @@ def home():
 
 @app.route('/edit', methods=["GET", "POST"])
 def edit():
+    delete_expired_vacation()
     form = AddEmployeeForm()
     if form.validate_on_submit():
         if request.method == 'POST':
@@ -150,6 +160,7 @@ def delete_employee(id):
 
 
 
+'''DB actions'''
 def add_employee(name: str, position: str = None, birthday: str = None, vacation_start: str = None, vacation_end: str = None, email: str = None, contract: str = None) -> None:
     with app.app_context():
         employee = Employee4(name=name, position=position, birthday=birthday, vacation_start=vacation_start, vacation_end=vacation_end, email=email, contract=contract)
@@ -172,10 +183,26 @@ def check_if_exists(name: str) -> bool:
             continue
     return False
 
+
+def delete_expired_vacation() -> None:
+    employees = get_employees()
+    for employee in employees:
+        if employee.vacation_start and employee.vacation_end:
+            if find_timedelta(employee.vacation_end) < 0:
+                with app.app_context():
+                    employee1 = db.session.get(Employee4, int(employee.id))
+                    employee1.vacation_start = None
+                    employee1.vacation_end = None
+                    db.session.commit()
     
 
+
+'''Events actions'''
 def find_timedelta(date) -> int:
     return (date - dt.datetime.now().date()).days
+
+def find_timedelta_month(date) -> int:
+    return (date - dt.datetime.now().date()).month
 
 def vacation_now() -> list[list]:
     employees = get_employees()
@@ -193,7 +220,7 @@ def vacation_soon() -> list[list]:
     result = []
     for employee in employees:
         if employee.vacation_start:
-            if find_timedelta(employee.vacation_start) < 14 and find_timedelta(employee.vacation_start) > 1:
+            if find_timedelta(employee.vacation_start) <= 14 and find_timedelta(employee.vacation_start) > 1:
                 result.append([employee.name, find_timedelta(employee.vacation_start), employee.vacation_start])
         else:
             pass
@@ -215,17 +242,76 @@ def contract_soon() -> list[list]:
     result = []
     for employee in employees:
         if employee.contract:
-            if find_timedelta(employee.contract) < 180 :
+            if find_timedelta(employee.contract) <= 180:
                 result.append([employee.name, find_timedelta(employee.contract), employee.contract])
         else:
             continue
     return result
 
-@scheduler.task('interval', id='every_second', seconds=1)
+def check_events() -> dict[str: list[tuple]]:
+    events = {
+        'contract_soon': [],
+        'birthday_soon': [],
+        'vacation_soon': []
+    }
+
+    for employee in contract_soon():
+        if employee[1] == 60:
+            events['contract_soon'].append((employee[0], employee[1], employee[2]))
+
+    for employee in birthday_soon():
+        if employee[1] == 3 or employee[1] == 0:
+            events['birthday_soon'].append((employee[0], employee[1], employee[2]))
+
+    for employee in vacation_soon():
+        if employee[1] == 14:
+            events['vacation_soon'].append((employee[0], employee[1], employee[2]))
+    return events
+            
+
+    
+
+
+
+
+
+'''Email actions'''
+
+def send_email(name, days, date, action):
+    if days != 0:
+        text = f'У сотрудника {name} {action} через {days} дней - {date.strftime("%d.%m.%Y")}'
+        subject = f'{action.capitalize()} через {days} дней!'
+    else:
+        text = f'У сотрудника {name} сегоня День Рождения'
+        subject = 'День Рождения сегодня!'
+    return requests.post(
+        f"https://api.mailgun.net/v3/{DOMAIN}/messages",
+        auth=("api", API_KEY),
+        data={
+            "from": f"Dizzain.com - Сотрудники <mailgun@{DOMAIN}>",
+            "to": RECIPIENTS[0],
+            "subject": subject,
+            "text": text
+        }
+    )
+
+
+
+@scheduler.task('interval', id='every_second', seconds=60)
 def job():
     with app.app_context():
-        pass
+        if dt.datetime.now().hour == 14 and dt.datetime.now().minute == 34:
+            events = check_events()
+            for birthday in events['birthday_soon']:
+                    send_email(birthday[0], birthday[1], birthday[2], 'День Рождения')
 
+            for contract in events['contract_soon']:
+                    send_email(contract[0], contract[1], contract[2], 'истечение контракта')
+
+            for vacation in events['vacation_soon']:
+                    send_email(vacation[0], vacation[1], vacation[2], 'отпуск')
+
+# print(check_events())
 
 if __name__ == '__main__':
     app.run(debug=True)
