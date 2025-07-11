@@ -59,11 +59,11 @@ class Employee4(db.Model):
 
 class AddEmployeeForm(FlaskForm):
     name = StringField('Имя', validators=[DataRequired()])
-    position = StringField('Должность', validators=[Optional()])
-    birthday = DateField('Дата рождения', validators=[Optional()])
+    position = StringField('Должность', validators=[DataRequired()])
+    birthday = DateField('Дата рождения', validators=[DataRequired()])
     vacation_start = DateField('Начало отпуска', validators=[Optional()])
     vacation_end = DateField('Конец отпуска', validators=[Optional()])
-    email = StringField('Email', validators=[Optional()])
+    email = StringField('Email', validators=[DataRequired()])
     contract = DateField('Истечение контракта', validators=[Optional()])
     submit = SubmitField('Добавить', validators=[Optional()])
 
@@ -288,7 +288,7 @@ def send_email(name, days, date, action):
         f"https://api.mailgun.net/v3/{DOMAIN}/messages",
         auth=("api", API_KEY),
         data={
-            "from": f"Dizzain.com - Сотрудники <mailgun@{DOMAIN}>",
+            "from": f"Dizzain.com <mailgun@{DOMAIN}>",
             "to": RECIPIENTS[0],
             "subject": subject,
             "text": text
@@ -297,10 +297,11 @@ def send_email(name, days, date, action):
 
 
 
-@scheduler.task('interval', id='every_second', seconds=60)
+@scheduler.task('interval', id='every_second', seconds=20)
 def job():
+    print(True)
     with app.app_context():
-        if dt.datetime.now().hour == 14 and dt.datetime.now().minute == 34:
+        if dt.datetime.now().hour == 18:
             events = check_events()
             for birthday in events['birthday_soon']:
                     send_email(birthday[0], birthday[1], birthday[2], 'День Рождения')
@@ -311,7 +312,7 @@ def job():
             for vacation in events['vacation_soon']:
                     send_email(vacation[0], vacation[1], vacation[2], 'отпуск')
 
-# print(check_events())
+
 
 if __name__ == '__main__':
     app.run(debug=True)

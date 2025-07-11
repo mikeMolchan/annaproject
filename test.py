@@ -2,7 +2,7 @@ import requests
 
 domain = 'mg.noreplywp.com'
 API_key = 'ab78b2973ee530ac2782f55e027a20f4-c5ea400f-893fc5ef'
-recipient = 'mikke.molchan@gmail.com'
+recipient = 'misha.molchan2008@gmail.com'
 
 
 
@@ -17,3 +17,5 @@ def send_email(recipient, subject, text):
             "text": text
         }
     )
+
+print(True)
