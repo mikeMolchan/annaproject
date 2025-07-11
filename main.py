@@ -297,20 +297,20 @@ def send_email(name, days, date, action):
 
 
 
-@scheduler.task('interval', id='every_second', seconds=20)
-def job():
-    print(True)
-    with app.app_context():
-        if dt.datetime.now().hour == 18:
-            events = check_events()
-            for birthday in events['birthday_soon']:
-                    send_email(birthday[0], birthday[1], birthday[2], 'День Рождения')
+# @scheduler.task('interval', id='every_second', seconds=20)
+# def job():
+#     print(True)
+#     with app.app_context():
+#         if dt.datetime.now().hour == 18:
+#             events = check_events()
+#             for birthday in events['birthday_soon']:
+#                     send_email(birthday[0], birthday[1], birthday[2], 'День Рождения')
 
-            for contract in events['contract_soon']:
-                    send_email(contract[0], contract[1], contract[2], 'истечение контракта')
+#             for contract in events['contract_soon']:
+#                     send_email(contract[0], contract[1], contract[2], 'истечение контракта')
 
-            for vacation in events['vacation_soon']:
-                    send_email(vacation[0], vacation[1], vacation[2], 'отпуск')
+#             for vacation in events['vacation_soon']:
+#                     send_email(vacation[0], vacation[1], vacation[2], 'отпуск')
 
 
 
